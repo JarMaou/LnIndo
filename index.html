@@ -28,6 +28,7 @@
       height: 100%;
       z-index: -1;
       object-fit: cover;
+      transition: background-color 0.5s; /* Tambahkan transisi */
     }
 
     .title {
@@ -111,15 +112,27 @@
       background-color: rgba(255, 255, 255, 0.8);
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
       cursor: pointer;
-      transition: transform 0.2s;
+      transition: transform 0.2s, border 0.3s;
       text-decoration: none;
       color: inherit;
       border-radius: 10px; 
       overflow: hidden; 
+      border: 5px solid transparent; /* Border transparan */
+      background-clip: padding-box; /* Memastikan latar belakang tidak menutupi border */
     }
 
     .box:hover {
       transform: scale(1.05);
+      border: 5px solid transparent; /* Mengubah warna border saat hover */
+      animation: borderAnimation 1s infinite; /* Animasi border berwarna-warni */
+    }
+
+    @keyframes borderAnimation {
+      0% { border-color: red; }
+      25% { border-color: orange; }
+      50% { border-color: yellow; }
+      75% { border-color: green; }
+      100% { border-color: blue; }
     }
 
     .box img {
@@ -135,23 +148,12 @@
       text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
     }
 
-    .box .rainbow-border {
-      width: 100%;
-      height: 5px;
-      background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-      background-size: 400%;
-      animation: rainbowBorder 5s linear infinite;
-    }
-
-    @keyframes rainbowBorder {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
-
     .upload-button,
     .upload-next-chapter-button,
     .rainbow-button,
-    .floating-button {
+    .floating-button,
+    .realistic-web-button,
+    .stop-mode-button {
       display: inline-block;
       padding: 10px 20px;
       margin: 0 5px;
@@ -205,6 +207,28 @@
 
     .rainbow-button:hover {
       background-color: #ff0080;
+      transform: scale(1.05);
+    }
+
+    .realistic-web-button {
+      background-color: #007BFF;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .realistic-web-button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .stop-mode-button {
+      background-color: #FF0000;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .stop-mode-button:hover {
+      background-color: #b30000;
       transform: scale(1.05);
     }
 
@@ -271,6 +295,21 @@
       from { opacity: 1; }
       to { opacity: 0; }
     }
+
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh);
+      }
+    }
   </style>
 </head>
 <body>
@@ -279,6 +318,7 @@
   </video>
 
   <div class="title">LIGHT NOVEL INDO</div>
+  <button class="realistic-web-button" id="realisticWebButton">Mode Realistis</button>
   
   <div class="button-container" id="mainButtons">
     <button class="upload-button" id="uploadButton">+</button>
@@ -302,13 +342,11 @@
       <img src="https://gcdnb.pbrd.co/images/NAjgySX6OqL.png" alt="Light Novel Image">
       <h3>Light Novel Mu</h3>
       <p>Author: ?</p>
-      <div class="rainbow-border"></div>
     </a>
     <a href="#" class="box" data-title="Judul LN ?" data-genre="Genre : ?">
       <img src="https://gcdnb.pbrd.co/images/N6AjgySX6qL.png" alt="Light Novel Image">
       <h3>Light Novel Mu</h3>
       <p>Author: ?</p>
-      <div class="rainbow-border"></div>
     </a>
   </div>
 
@@ -346,6 +384,7 @@
     const uploadLNButton = document.getElementById('uploadLNButton');
     const uploadNextChapterButton = document.getElementById('uploadNextChapterButton');
     const rulesButton = document.getElementById('rulesButton');
+    const realisticWebButton = document.getElementById('realisticWebButton');
     const floating = document.getElementById('floating');
     const floatingWarning = document.getElementById('floatingWarning');
     const countdownDisplay = document.getElementById('countdown');
@@ -355,11 +394,23 @@
     const boxes = document.querySelectorAll('.box');
     const searchBar = document.getElementById('searchBar');
     const searchButton = document.getElementById('searchButton');
+    const videoBackground = document.getElementById('video-background');
 
     let countdownValue = 5;
     let countdownInterval;
     let adCountdownValue = 3;
     let adCountdownInterval;
+    let snowflakeInterval;
+
+    const originalVideoSrc = videoBackground.querySelector('source').src; // Video original
+    const realisticVideoSrc = 'https://www.dropbox.com/scl/fi/ahy8obhtfqu0igxegykko/463a2bff2bdedf43f039c0e43884e696.mp4?rlkey=uif9hl91izgo04rcdxagmzw06&st=6beny70a&dl=1'; // Video realistis
+
+    const checkRealisticMode = () => {
+      const isRealisticActive = localStorage.getItem('realisticMode') === 'true';
+      if (isRealisticActive) {
+        activateRealisticMode();
+      }
+    };
 
     uploadButton.addEventListener('click', () => {
       const isDisplayNone = uploadLNButtonContainer.style.display === 'none';
@@ -433,10 +484,6 @@
       document.querySelector('.search-container').style.display = 'none';
       document.querySelector('.container').style.display = 'none';
       rulesContainer.style.display = 'block';
-
-      // Menambahkan animasi pada teks dan tombol
-      rulesContainer.querySelector('h2').style.animation = 'fadeIn 0.5s forwards';
-      closeButton.style.animation = 'fadeIn 0.5s forwards';
     });
 
     closeButton.addEventListener('click', () => {
@@ -484,6 +531,78 @@
         }
       });
     });
+
+    realisticWebButton.addEventListener('click', () => {
+      const isActive = realisticWebButton.textContent === 'Hentikan Mode';
+      
+      if (isActive) {
+        // Hentikan mode realistis
+        stopRealisticMode();
+      } else {
+        // Aktifkan mode realistis
+        activateRealisticMode();
+      }
+    });
+
+    const activateRealisticMode = () => {
+      // Ganti video latar belakang
+      videoBackground.querySelector('source').src = realisticVideoSrc;
+      videoBackground.load(); // Memuat video baru
+      videoBackground.play(); // Memutar video
+      videoBackground.loop = true; // Ulangi video
+
+      // Ubah latar belakang menjadi pelangi
+      document.body.style.background = 'linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)';
+      document.body.style.backgroundSize = '400% 400%';
+      document.body.style.animation = 'rainbowAnimation 10s linear infinite'; // Tambahkan animasi pelangi
+
+      // Ubah tombol menjadi "Hentikan Mode"
+      realisticWebButton.textContent = 'Hentikan Mode';
+      realisticWebButton.classList.replace('realistic-web-button', 'stop-mode-button');
+
+      // Simpan status di localStorage
+      localStorage.setItem('realisticMode', 'true');
+
+      // Tambahkan efek salju
+      snowflakeInterval = setInterval(() => {
+        const snowflake = document.createElement('div');
+        snowflake.classList.add('snowflake');
+        snowflake.style.left = `${Math.random() * 100}vw`;
+        snowflake.style.width = `${Math.random() * 10 + 10}px`;
+        snowflake.style.height = snowflake.style.width;
+        snowflake.style.animationDuration = `${Math.random() * 3 + 2}s`;
+        document.body.appendChild(snowflake);
+
+        // Hapus salju setelah animasi selesai
+        setTimeout(() => {
+          snowflake.remove();
+        }, parseFloat(snowflake.style.animationDuration) * 1000);
+      }, 100);
+    };
+
+    const stopRealisticMode = () => {
+      // Kembalikan video latar belakang ke video original
+      videoBackground.querySelector('source').src = originalVideoSrc;
+      videoBackground.load(); // Memuat video original
+      videoBackground.play(); // Memutar video original
+
+      // Ubah latar belakang ke keadaan semula
+      document.body.style.background = ''; // Kembalikan warna latar belakang
+      document.body.style.animation = ''; // Hentikan animasi pelangi
+
+      // Ubah tombol menjadi "Mode Realistis"
+      realisticWebButton.textContent = 'Mode Realistis';
+      realisticWebButton.classList.replace('stop-mode-button', 'realistic-web-button');
+
+      // Simpan status di localStorage
+      localStorage.setItem('realisticMode', 'false');
+
+      // Hentikan efek salju
+      clearInterval(snowflakeInterval);
+    };
+
+    // Cek status mode realistis saat halaman dimuat
+    checkRealisticMode();
   </script>
 </body>
 </html>
