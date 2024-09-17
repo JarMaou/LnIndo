@@ -1,608 +1,68 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Light Novel Indo</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      position: relative;
-      height: 100vh;
-      overflow: hidden;
-      background: none;
+  <title>Real-time Voting</title>
+  <!-- Firebase SDK -->
+  <script type="module">
+    // Import Firebase functions
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBqcBlQiitzfvBbCUdVraEqeL9y9dkv4Nw",
+      authDomain: "tesvote-1a2d2.firebaseapp.com",
+      projectId: "tesvote-1a2d2",
+      storageBucket: "tesvote-1a2d2.appspot.com",
+      messagingSenderId: "367429283",
+      appId: "1:367429283:web:8b67c01a63e79443dbe116"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Function to cast a vote
+    function vote(option) {
+      const voteRef = ref(database, 'votes/' + option);
+      runTransaction(voteRef, (currentVotes) => {
+        return (currentVotes || 0) + 1;
+      });
     }
 
-    #video-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      object-fit: cover;
-      transition: background-color 0.5s; /* Tambahkan transisi */
+    // Function to update vote counts in real-time
+    function updateVotes() {
+      const option1Ref = ref(database, 'votes/Option1');
+      const option2Ref = ref(database, 'votes/Option2');
+
+      // Listen for real-time updates to Option1 votes
+      onValue(option1Ref, (snapshot) => {
+        const votes = snapshot.val() || 0;
+        document.getElementById('option1Count').innerText = "Option 1: " + votes;
+      });
+
+      // Listen for real-time updates to Option2 votes
+      onValue(option2Ref, (snapshot) => {
+        const votes = snapshot.val() || 0;
+        document.getElementById('option2Count').innerText = "Option 2: " + votes;
+      });
     }
 
-    .title {
-      font-size: 2.5rem;
-      font-weight: bold;
-      margin: 20px 0;
-      background: linear-gradient(to right, #ff0000, #ffffff);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      animation: colorChange 3s infinite;
-      text-align: center;
-    }
-
-    @keyframes colorChange {
-      0% { background-position: 0%; }
-      50% { background-position: 100%; }
-      100% { background-position: 0%; }
-    }
-
-    .button-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    .search-container {
-      display: flex;
-      justify-content: center;
-      margin-top: 20px;
-      width: 100%;
-      padding: 0 10%;
-    }
-
-    .search-bar {
-      flex-grow: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
-
-    .search-bar::placeholder {
-      color: #ccc;
-    }
-
-    .search-icon {
-      background-color: #4CAF50;
-      border: none;
-      padding: 0 15px;
-      border-radius: 5px;
-      margin-left: 10px;
-      cursor: pointer;
-      transition: background-color 0.3s, transform 0.3s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-    }
-
-    .search-icon:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      grid-gap: 20px;
-      margin: 20px;
-      position: relative;
-      z-index: 1;
-      width: 90%;
-    }
-
-    .box {
-      position: relative;
-      padding: 10px;
-      text-align: center;
-      background-color: rgba(255, 255, 255, 0.8);
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-      cursor: pointer;
-      transition: transform 0.2s, border 0.3s;
-      text-decoration: none;
-      color: inherit;
-      border-radius: 10px; 
-      overflow: hidden; 
-      border: 5px solid transparent; /* Border transparan */
-      background-clip: padding-box; /* Memastikan latar belakang tidak menutupi border */
-    }
-
-    .box:hover {
-      transform: scale(1.05);
-      border: 5px solid transparent; /* Mengubah warna border saat hover */
-      animation: borderAnimation 1s infinite; /* Animasi border berwarna-warni */
-    }
-
-    @keyframes borderAnimation {
-      0% { border-color: red; }
-      25% { border-color: orange; }
-      50% { border-color: yellow; }
-      75% { border-color: green; }
-      100% { border-color: blue; }
-    }
-
-    .box img {
-      width: 100%;
-      height: 100px;
-      object-fit: cover;
-      margin-bottom: 10px;
-    }
-
-    .box h3,
-    .box p {
-      color: #000;
-      text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
-    }
-
-    .upload-button,
-    .upload-next-chapter-button,
-    .rainbow-button,
-    .floating-button,
-    .realistic-web-button,
-    .stop-mode-button {
-      display: inline-block;
-      padding: 10px 20px;
-      margin: 0 5px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.3s, transform 0.3s;
-    }
-
-    .upload-button {
-      background-color: #4CAF50;
-      color: #fff;
-      font-weight: bold;
-      animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.1); }
-    }
-
-    .upload-button:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    .upload-next-chapter-button {
-      background-color: #ff8c00;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    .upload-next-chapter-button:hover {
-      background-color: #e07b00;
-      transform: scale(1.05);
-    }
-
-    .rainbow-button {
-      background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-      background-size: 400%; 
-      animation: rainbowButton 5s infinite;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    @keyframes rainbowButton {
-      0%, 100% { background-position: 0%; }
-      50% { background-position: 100%; }
-    }
-
-    .rainbow-button:hover {
-      background-color: #ff0080;
-      transform: scale(1.05);
-    }
-
-    .realistic-web-button {
-      background-color: #007BFF;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    .realistic-web-button:hover {
-      background-color: #0056b3;
-      transform: scale(1.05);
-    }
-
-    .stop-mode-button {
-      background-color: #FF0000;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    .stop-mode-button:hover {
-      background-color: #b30000;
-      transform: scale(1.05);
-    }
-
-    .floating {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: rgba(0, 0, 0, 0.9);
-      color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-      text-align: center;
-      z-index: 1000;
-      animation: fadeIn 0.5s, fadeOut 0.5s;
-    }
-
-    .floating p {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-
-    .countdown {
-      font-size: 2rem;
-      font-weight: bold;
-      color: #ff0000;
-      margin-top: 10px;
-    }
-
-    .rules-container {
-      display: none; /* Awalnya disembunyikan */
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .rules-container h2 {
-      font-weight: bold; /* Menjadikan judul peraturan tebal */
-      color: #ffcc00; /* Warna judul peraturan */
-    }
-
-    .rules-container ul {
-      list-style-type: none;
-      padding: 0;
-      text-align: left;
-      margin: 0 auto;
-      display: inline-block;
-      font-weight: bold; /* Menjadikan teks peraturan tebal */
-    }
-
-    .rules-container li {
-      color: #00ffcc; /* Warna teks peraturan */
-      margin: 5px 0; /* Jarak antar peraturan */
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
-
-    .snowflake {
-      position: fixed;
-      top: -10px;
-      background: white;
-      border-radius: 50%;
-      opacity: 0.8;
-      animation: fall linear infinite;
-    }
-
-    @keyframes fall {
-      to {
-        transform: translateY(100vh);
-      }
-    }
-  </style>
+    // Call updateVotes when the page loads
+    window.onload = () => {
+      updateVotes();
+    };
+  </script>
 </head>
 <body>
-  <video id="video-background" autoplay muted loop>
-    <source src="https://www.dropbox.com/scl/fi/544ttsv57dqwgeucneckm/a355011006e42cb4fe0a258eccd0cdcf.mp4?rlkey=b7ugsplep3zc4ffwkb7g7ckbz&st=fnapoyfw&dl=1" type="video/mp4">
-  </video>
+  <h1>Vote Now!</h1>
+  <button onclick="vote('Option1')">Option 1</button>
+  <button onclick="vote('Option2')">Option 2</button>
 
-  <div class="title">LIGHT NOVEL INDO</div>
-  <button class="realistic-web-button" id="realisticWebButton">Mode Realistis</button>
-  
-  <div class="button-container" id="mainButtons">
-    <button class="upload-button" id="uploadButton">+</button>
-    <button class="upload-next-chapter-button" id="uploadNextChapterButton">Upload Next Chapter</button>
-    <button class="rainbow-button" id="rulesButton">PERATURAN LNINDO</button>
-  </div>
-
-  <div id="uploadLNButtonContainer" style="display: none;">
-    <button class="upload-button" id="uploadLNButton">Upload LN</button>
-  </div>
-
-  <div class="search-container">
-    <input type="text" class="search-bar" id="searchBar" placeholder="Cari Light Novel...">
-    <button class="search-icon" id="searchButton">
-      <img src="https://img.icons8.com/ios-filled/50/ffffff/search.png" alt="Search">
-    </button>
-  </div>
-
-  <div class="container" id="characterContainer">
-    <a href="#" class="box" data-title="?" data-genre="?">
-      <img src="https://gcdnb.pbrd.co/images/NAjgySX6OqL.png" alt="Light Novel Image">
-      <h3>Light Novel Mu</h3>
-      <p>Author: ?</p>
-    </a>
-    <a href="#" class="box" data-title="Judul LN ?" data-genre="Genre : ?">
-      <img src="https://gcdnb.pbrd.co/images/N6AjgySX6qL.png" alt="Light Novel Image">
-      <h3>Light Novel Mu</h3>
-      <p>Author: ?</p>
-    </a>
-  </div>
-
-  <div class="floating" id="floating">
-    <p class="rainbow-text" id="floatingTitle">JUDUL LN: ? </p>
-    <p class="rainbow-text" id="floatingGenre">GENRE LN: ?</p>
-    <p class="countdown" id="countdown">5</p>
-  </div>
-
-  <div class="floating" id="floatingWarning">
-    <p class="rainbow-text">Lewati iklan terlebih dahulu</p>
-    <p class="countdown" id="adCountdown">3</p>
-  </div>
-
-  <div class="rules-container" id="rulesContainer">
-    <h2>PERINGATAN !!!</h2>
-    <p>AGAR NOVEL KAMU DI TERIMA ADMIN PASTIKAN BACA BEBERAPA PERATURAN DI BAWAH</p>
-    <ul>
-      <li>1• TIDAK MENGAMBIL NOVEL ORANG LAIN DAN DI KIRIM DI LIGHT NOVEL INDO</li>
-      <li>2• TIDAK MEMBUAT NOVEL DARI GENERATE AI HARUS WAJIB BUATAN SENDIRI, USAHA KITA SENDIRI 🇮🇩</li>
-      <li>3• BOLEH PAKE AI UNTUK MEMBUAT FOTO LIGHT NOVEL SAJA ATAU FOTO JUDUL LIGHT NOVEL MU</li>
-      <li>4• PASTIKAN CERITA PANJANG JIKA PENDEK AKAN DI TOLAK</li>
-      <li>5• PATUHI SEMUA ATURAN YANG ADA</li>
-    </ul>
-    <p>Jika melanggar Light Novel Akan Di Tolak 🤫</p>
-    <div class="floating-buttons">
-      <button class="floating-button" id="closeButton">CLOSE</button>
-    </div>
-  </div>
-
-  <script>
-    const uploadButton = document.getElementById('uploadButton');
-    const mainButtons = document.getElementById('mainButtons');
-    const uploadLNButtonContainer = document.getElementById('uploadLNButtonContainer');
-    const uploadLNButton = document.getElementById('uploadLNButton');
-    const uploadNextChapterButton = document.getElementById('uploadNextChapterButton');
-    const rulesButton = document.getElementById('rulesButton');
-    const realisticWebButton = document.getElementById('realisticWebButton');
-    const floating = document.getElementById('floating');
-    const floatingWarning = document.getElementById('floatingWarning');
-    const countdownDisplay = document.getElementById('countdown');
-    const adCountdownDisplay = document.getElementById('adCountdown');
-    const rulesContainer = document.getElementById('rulesContainer');
-    const closeButton = document.getElementById('closeButton');
-    const boxes = document.querySelectorAll('.box');
-    const searchBar = document.getElementById('searchBar');
-    const searchButton = document.getElementById('searchButton');
-    const videoBackground = document.getElementById('video-background');
-
-    let countdownValue = 5;
-    let countdownInterval;
-    let adCountdownValue = 3;
-    let adCountdownInterval;
-    let snowflakeInterval;
-
-    const originalVideoSrc = videoBackground.querySelector('source').src; // Video original
-    const realisticVideoSrc = 'https://www.dropbox.com/scl/fi/ahy8obhtfqu0igxegykko/463a2bff2bdedf43f039c0e43884e696.mp4?rlkey=uif9hl91izgo04rcdxagmzw06&st=6beny70a&dl=1'; // Video realistis
-
-    const checkRealisticMode = () => {
-      const isRealisticActive = localStorage.getItem('realisticMode') === 'true';
-      if (isRealisticActive) {
-        activateRealisticMode();
-      }
-    };
-
-    uploadButton.addEventListener('click', () => {
-      const isDisplayNone = uploadLNButtonContainer.style.display === 'none';
-      uploadLNButtonContainer.style.display = isDisplayNone ? 'block' : 'none';
-      uploadNextChapterButton.style.display = 'block'; // Menampilkan tombol Upload Next Chapter
-      uploadButton.textContent = isDisplayNone ? 'X' : '+';
-    });
-
-    const showAdFloating = (callback) => {
-      floatingWarning.style.display = 'block';
-      floatingWarning.style.animation = 'fadeIn 0.5s';
-      adCountdownValue = 3; // Reset countdown
-      adCountdownInterval = setInterval(() => {
-        adCountdownDisplay.textContent = adCountdownValue;
-        if (adCountdownValue <= 0) {
-          clearInterval(adCountdownInterval);
-          floatingWarning.style.animation = 'fadeOut 0.5s';
-          setTimeout(() => {
-            floatingWarning.style.display = 'none';
-            if (callback) callback();
-          }, 500);
-        }
-        adCountdownValue--;
-      }, 1000);
-    };
-
-    uploadLNButton.addEventListener('click', () => {
-      showAdFloating(() => {
-        window.location.href = 'https://sfl.gl/J6OWYb'; // Ganti dengan link upload yang sesuai
-      });
-    });
-
-    uploadNextChapterButton.addEventListener('click', () => {
-      showAdFloating(() => {
-        window.location.href = 'https://sfl.gl/kdTSdcKr'; // Ganti dengan URL yang sesuai
-      });
-    });
-
-    const showFloating = (title, genre) => {
-      document.getElementById('floatingTitle').textContent = `JUDUL LN: ${title}`;
-      document.getElementById('floatingGenre').textContent = `GENRE LN: ${genre}`;
-      floating.style.display = 'block';
-      floating.style.animation = 'fadeIn 0.5s';
-      countdownValue = 5; // Reset countdown
-      countdownInterval = setInterval(() => {
-        countdownDisplay.textContent = countdownValue;
-        if (countdownValue <= 0) {
-          clearInterval(countdownInterval);
-          floating.style.animation = 'fadeOut 0.5s';
-          setTimeout(() => {
-            floating.style.display = 'none';
-            // Arahkan ke URL yang sesuai setelah countdown selesai
-            window.location.href = '#'; // Ganti dengan URL yang sesuai
-          }, 500);
-        }
-        countdownValue--;
-      }, 1000);
-    };
-
-    boxes.forEach(box => {
-      box.addEventListener('click', () => {
-        const title = box.getAttribute('data-title');
-        const genre = box.getAttribute('data-genre');
-        showFloating(title, genre);
-      });
-    });
-
-    rulesButton.addEventListener('click', () => {
-      mainButtons.style.display = 'none';
-      uploadLNButtonContainer.style.display = 'none';
-      document.querySelector('.search-container').style.display = 'none';
-      document.querySelector('.container').style.display = 'none';
-      rulesContainer.style.display = 'block';
-    });
-
-    closeButton.addEventListener('click', () => {
-      // Mengembalikan tampilan semula
-      mainButtons.style.display = 'flex';
-      uploadLNButtonContainer.style.display = 'none';
-      document.querySelector('.search-container').style.display = 'flex';
-      document.querySelector('.container').style.display = 'grid';
-      rulesContainer.style.display = 'none';
-    });
-
-    searchButton.addEventListener('click', () => {
-      const searchTerm = searchBar.value.toLowerCase();
-      const boxes = document.querySelectorAll('.box');
-
-      // Sembunyikan semua light novel terlebih dahulu
-      boxes.forEach(box => {
-        box.style.display = 'none';
-      });
-
-      // Tampilkan light novel yang sesuai setelah tombol pencarian diklik
-      boxes.forEach(box => {
-        const lightNovelName = box.querySelector('h3').textContent.toLowerCase();
-        if (lightNovelName.includes(searchTerm)) {
-          box.style.display = 'block';
-        }
-      });
-    });
-
-    // Tambahkan fungsionalitas untuk pencarian secara real-time
-    searchBar.addEventListener('input', () => {
-      const searchTerm = searchBar.value.toLowerCase();
-      const boxes = document.querySelectorAll('.box');
-
-      // Sembunyikan semua light novel terlebih dahulu
-      boxes.forEach(box => {
-        box.style.display = 'none';
-      });
-
-      // Tampilkan light novel yang sesuai saat mengetik di search bar
-      boxes.forEach(box => {
-        const lightNovelName = box.querySelector('h3').textContent.toLowerCase();
-        if (lightNovelName.includes(searchTerm)) {
-          box.style.display = 'block';
-        }
-      });
-    });
-
-    realisticWebButton.addEventListener('click', () => {
-      const isActive = realisticWebButton.textContent === 'Hentikan Mode';
-      
-      if (isActive) {
-        // Hentikan mode realistis
-        stopRealisticMode();
-      } else {
-        // Aktifkan mode realistis
-        activateRealisticMode();
-      }
-    });
-
-    const activateRealisticMode = () => {
-      // Ganti video latar belakang
-      videoBackground.querySelector('source').src = realisticVideoSrc;
-      videoBackground.load(); // Memuat video baru
-      videoBackground.play(); // Memutar video
-      videoBackground.loop = true; // Ulangi video
-
-      // Ubah latar belakang menjadi pelangi
-      document.body.style.background = 'linear-gradient(270deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff)';
-      document.body.style.backgroundSize = '400% 400%';
-      document.body.style.animation = 'rainbowAnimation 10s linear infinite'; // Tambahkan animasi pelangi
-
-      // Ubah tombol menjadi "Hentikan Mode"
-      realisticWebButton.textContent = 'Hentikan Mode';
-      realisticWebButton.classList.replace('realistic-web-button', 'stop-mode-button');
-
-      // Simpan status di localStorage
-      localStorage.setItem('realisticMode', 'true');
-
-      // Tambahkan efek salju
-      snowflakeInterval = setInterval(() => {
-        const snowflake = document.createElement('div');
-        snowflake.classList.add('snowflake');
-        snowflake.style.left = `${Math.random() * 100}vw`;
-        snowflake.style.width = `${Math.random() * 10 + 10}px`;
-        snowflake.style.height = snowflake.style.width;
-        snowflake.style.animationDuration = `${Math.random() * 3 + 2}s`;
-        document.body.appendChild(snowflake);
-
-        // Hapus salju setelah animasi selesai
-        setTimeout(() => {
-          snowflake.remove();
-        }, parseFloat(snowflake.style.animationDuration) * 1000);
-      }, 100);
-    };
-
-    const stopRealisticMode = () => {
-      // Kembalikan video latar belakang ke video original
-      videoBackground.querySelector('source').src = originalVideoSrc;
-      videoBackground.load(); // Memuat video original
-      videoBackground.play(); // Memutar video original
-
-      // Ubah latar belakang ke keadaan semula
-      document.body.style.background = ''; // Kembalikan warna latar belakang
-      document.body.style.animation = ''; // Hentikan animasi pelangi
-
-      // Ubah tombol menjadi "Mode Realistis"
-      realisticWebButton.textContent = 'Mode Realistis';
-      realisticWebButton.classList.replace('stop-mode-button', 'realistic-web-button');
-
-      // Simpan status di localStorage
-      localStorage.setItem('realisticMode', 'false');
-
-      // Hentikan efek salju
-      clearInterval(snowflakeInterval);
-    };
-
-    // Cek status mode realistis saat halaman dimuat
-    checkRealisticMode();
-  </script>
+  <h2>Results:</h2>
+  <p id="option1Count">Option 1: 0</p>
+  <p id="option2Count">Option 2: 0</p>
 </body>
 </html>
