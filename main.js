@@ -11,6 +11,7 @@ let comments = []; // Array untuk menyimpan komentar
 // Middleware untuk melayani file statis
 app.use(express.static('public'));
 
+// Event ketika pengguna terhubung
 io.on('connection', (socket) => {
     console.log('A user connected');
 
@@ -28,6 +29,7 @@ io.on('connection', (socket) => {
     });
 });
 
+// Jalankan server di port 3000
 server.listen(3000, () => {
     console.log('Server is running on http://localhost:3000');
 });
