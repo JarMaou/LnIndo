@@ -1,68 +1,145 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real-time Voting</title>
-  <!-- Firebase SDK -->
-  <script type="module">
-    // Import Firebase functions
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Comments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
 
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBqcBlQiitzfvBbCUdVraEqeL9y9dkv4Nw",
-      authDomain: "tesvote-1a2d2.firebaseapp.com",
-      projectId: "tesvote-1a2d2",
-      storageBucket: "tesvote-1a2d2.appspot.com",
-      messagingSenderId: "367429283",
-      appId: "1:367429283:web:8b67c01a63e79443dbe116"
-    };
+        h1 {
+            text-align: center;
+            color: #333;
+        }
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+        form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
 
-    // Function to cast a vote
-    function vote(option) {
-      const voteRef = ref(database, 'votes/' + option);
-      runTransaction(voteRef, (currentVotes) => {
-        return (currentVotes || 0) + 1;
-      });
-    }
+        #commentForm input[type="text"] {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 200px;
+        }
 
-    // Function to update vote counts in real-time
-    function updateVotes() {
-      const option1Ref = ref(database, 'votes/Option1');
-      const option2Ref = ref(database, 'votes/Option2');
+        #commentForm button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-      // Listen for real-time updates to Option1 votes
-      onValue(option1Ref, (snapshot) => {
-        const votes = snapshot.val() || 0;
-        document.getElementById('option1Count').innerText = "Option 1: " + votes;
-      });
+        #commentForm button:hover {
+            background-color: #0056b3;
+        }
 
-      // Listen for real-time updates to Option2 votes
-      onValue(option2Ref, (snapshot) => {
-        const votes = snapshot.val() || 0;
-        document.getElementById('option2Count').innerText = "Option 2: " + votes;
-      });
-    }
+        #comments {
+            max-width: 600px;
+            margin: 0 auto;
+        }
 
-    // Call updateVotes when the page loads
-    window.onload = () => {
-      updateVotes();
-    };
-  </script>
+        .comment {
+            display: flex;
+            align-items: center;
+            background-color: #fff;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .comment img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .comment-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comment-username {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .comment-time {
+            font-size: 0.8em;
+            color: #999;
+        }
+
+        .comment-text {
+            margin-top: 5px;
+            color: #555;
+        }
+    </style>
 </head>
 <body>
-  <h1>Vote Now!</h1>
-  <button onclick="vote('Option1')">Option 1</button>
-  <button onclick="vote('Option2')">Option 2</button>
+    <h1>Real-Time Comments</h1>
+    <form id="commentForm">
+        <input type="text" id="usernameInput" placeholder="Enter your name" required autocomplete="off">
+        <input type="text" id="commentInput" placeholder="Enter your comment" required autocomplete="off">
+        <button type="submit">Submit</button>
+    </form>
+    <div id="comments"></div>
 
-  <h2>Results:</h2>
-  <p id="option1Count">Option 1: 0</p>
-  <p id="option2Count">Option 2: 0</p>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const commentForm = document.getElementById('commentForm');
+        const usernameInput = document.getElementById('usernameInput');
+        const commentInput = document.getElementById('commentInput');
+        const commentsDiv = document.getElementById('comments');
+
+        // Load existing comments
+        socket.on('load comments', (comments) => {
+            commentsDiv.innerHTML = ''; // Clear existing comments
+            comments.forEach(addComment);
+        });
+
+        // Listen for new comments
+        socket.on('new comment', (comment) => {
+            addComment(comment);
+        });
+
+        commentForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const comment = {
+                username: usernameInput.value,
+                text: commentInput.value,
+                time: new Date().toLocaleTimeString()
+            };
+            socket.emit('new comment', comment);
+            commentInput.value = '';
+        });
+
+        function addComment(comment) {
+            const div = document.createElement('div');
+            div.classList.add('comment');
+            div.innerHTML = `
+                <img src="https://via.placeholder.com/40" alt="Avatar">
+                <div class="comment-details">
+                    <span class="comment-username">${comment.username}</span>
+                    <span class="comment-time">${comment.time}</span>
+                    <p class="comment-text">${comment.text}</p>
+                </div>
+            `;
+            commentsDiv.appendChild(div);
+        }
+    </script>
 </body>
 </html>
