@@ -4,10 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Halaman 1</title>
+    <script>
+        function loginPremium() {
+            // Simpan status premium ke localStorage
+            localStorage.setItem('isPremium', 'true');
+            alert('Anda telah login sebagai pengguna premium!');
+        }
+    </script>
 </head>
 <body>
     <h1>Selamat datang di Halaman 1</h1>
     <p>Ini adalah halaman pertama.</p>
+    
+    <button onclick="loginPremium()">Login Premium</button>
+    <br>
     <a href="halaman2.html">Pergi ke Halaman 2</a>
 </body>
 </html>
