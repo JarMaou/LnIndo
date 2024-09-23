@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JJ ANIME & JJ KANE</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #008000; /* Pastikan background default hijau */
+        }
+
+        .box {
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 20px;
+            text-align: center;
+            width: 200px;
+            z-index: 1; /* Pastikan berada di depan animasi */
+        }
+
+        .box h1 {
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .box button {
+            background-color: #008000;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px 20px;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s;
+        }
+
+        .box button:hover {
+            background-color: #005000;
+        }
+
+        @keyframes flyEmoji {
+            0% {
+                transform: translateX(0) translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateX(20vw) translateY(20vh) rotate(180deg);
+            }
+            100% {
+                transform: translateX(-20vw) translateY(-20vh) rotate(360deg);
+            }
+        }
+
+        .emoji {
+            position: absolute;
+            font-size: 30px;
+            text-shadow: 0 0 10px #ffffff, 0 0 20px #ffffff, 0 0 30px rgba(255, 255, 255, 0.5);
+            animation: flyEmoji 8s ease-in-out infinite alternate;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>JJ ANIME</h1>
+        <button>Explore</button>
+    </div>
+    <div class="box">
+        <h1>JJ KANE</h1>
+        <button>Discover</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Buat container untuk animasi latar belakang
+            const backgroundContainer = document.createElement('div');
+            backgroundContainer.style.position = 'fixed';
+            backgroundContainer.style.top = '0';
+            backgroundContainer.style.left = '0';
+            backgroundContainer.style.width = '100%';
+            backgroundContainer.style.height = '100%';
+            backgroundContainer.style.zIndex = '-1';
+            backgroundContainer.style.overflow = 'hidden';
+            backgroundContainer.style.pointerEvents = 'none'; // Tidak mengganggu interaksi
+            document.body.appendChild(backgroundContainer);
+
+            // Tambahkan elemen emoji
+            const emojis = ['👻', '☠️'];
+            for (let i = 0; i < 20; i++) { // Jumlah emoji
+                const emojiElement = document.createElement('div');
+                emojiElement.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                emojiElement.className = 'emoji';
+                emojiElement.style.top = `${Math.random() * 100}vh`;
+                emojiElement.style.left = `${Math.random() * 100}vw`;
+                emojiElement.style.animationDuration = `${5 + Math.random() * 3}s`;
+                backgroundContainer.appendChild(emojiElement);
+            }
+        });
+    </script>
+</body>
+</html>
